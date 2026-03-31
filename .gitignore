@@ -1,0 +1,78 @@
+# ===========================
+# Node.js
+# ===========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.yarn/
+
+# ===========================
+# Environment Variables
+# ===========================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+.env*.local
+
+# ===========================
+# Build / Output
+# ===========================
+dist/
+build/
+out/
+
+# ===========================
+# Logs
+# ===========================
+logs/
+*.log
+
+# ===========================
+# OS Files
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===========================
+# IDE / Editor
+# ===========================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.sublime-workspace
+
+# ===========================
+# Testing
+# ===========================
+coverage/
+.nyc_output/
+
+# ===========================
+# Runtime / Temp
+# ===========================
+*.pid
+*.seed
+*.pid.lock
+tmp/
+temp/
+
+# ===========================
+# Package managers
+# ===========================
+# Uncomment if you prefer not to commit lock files
+# package-lock.json
+# yarn.lock

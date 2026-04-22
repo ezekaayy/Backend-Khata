@@ -11,5 +11,19 @@ const router = express.Router();
   */
 router.post("/", authMiddleware.authMiddleware, accountController.createAccountController);
 
+/** 
+ * - GET/api/accounts/
+ * - Get all accounts
+ * - Protected Route
+  */
+router.get("/", authMiddleware.authMiddleware, accountController.getUserAccountsController);
+
+/**
+ * - GET /api/accounts/balance/:accountId
+ * - Get account balance
+ * - Protected Route
+ */
+// router.get("/balance/:accountId", authMiddleware.authMiddleware, accountController.getAccountBalanceController);
+
 
 module.exports = router;

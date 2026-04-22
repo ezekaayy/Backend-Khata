@@ -97,6 +97,60 @@ If this wasn’t you, please ignore this email.
     await sendEmail(userEmail, subject, text, html);
 }
 
-module.exports = { sendRegisterationEmail };
+async function sendTransactionEmail({ userEmail, name, amount, toAccount }) {
+    const subject = "Funds Credited to Your Account!";
+    const text = `
+Hi ${name},
+
+Your account has been credited with ${amount} NPR.
+
+You can now securely access your account to view the transaction details.
+
+If this wasn’t you, please contact our support team immediately.
+
+– Backend Ledger Team
+`;
+
+    const html = `
+<div style="font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px;">
+  <div style="max-width: 500px; margin: auto; background: #ffffff; padding: 24px; border-radius: 8px;">
+    
+    <h2 style="margin: 0 0 10px; color: #111827;">
+      Funds Credited! 💰
+    </h2>
+
+    <p style="color: #4b5563; font-size: 14px;">
+      Hi ${name},
+    </p>
+
+    <p style="color: #4b5563; font-size: 14px;">
+      Your account has been credited with ${amount} NPR.
+    </p>
+
+    <p style="color: #4b5563; font-size: 14px;">
+      You can now securely access your account to view the transaction details.
+    </p>
+
+    <div style="margin: 20px 0;">
+      <a href="#" 
+         style="display: inline-block; padding: 10px 16px; background-color: #111827; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 14px;">
+        View Transaction
+      </a>
+    </div>
+
+    <p style="color: #9ca3af; font-size: 12px;">
+      If this wasn’t you, please contact our support team immediately.
+    </p>
+
+    <p style="color: #6b7280; font-size: 12px; margin-top: 20   px;">
+      – Backend Ledger Team
+    </p>
+
+  </div>
+</div>
+`;
+    await sendEmail(userEmail, subject, text, html);
+}
+module.exports = { sendRegisterationEmail, sendTransactionEmail };
 
 

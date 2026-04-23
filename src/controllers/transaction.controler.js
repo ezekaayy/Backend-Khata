@@ -63,24 +63,24 @@ async function createTransaction(req, res) {
                 message: "Transaction already processed",
                 transaction: isTransactionAlreadyExists
             })
+        }
 
-            if (isTransactionAlreadyExists.status == "PENDING") {
-                return res.status(200).json({
-                    message: "Transaction is still processsing",
-                })
-            }
+        if (isTransactionAlreadyExists.status === "PENDING") {
+            return res.status(200).json({
+                message: "Transaction is still processing",
+            })
+        }
 
-            if (isTransactionAlreadyExists.status == "FAILED") {
-                return res.status(500).json({
-                    message: "Transaction failed",
-                })
-            }
+        if (isTransactionAlreadyExists.status === "FAILED") {
+            return res.status(500).json({
+                message: "Previous transaction attempt failed. Please try with a new idempotency key if you want to retry.",
+            })
+        }
 
-            if (isTransactionAlreadyExists.status == "REVERSED") {
-                return res.status(500).json({
-                    message: "Transaction was reversed, please retry.",
-                })
-            }
+        if (isTransactionAlreadyExists.status === "REVERSED") {
+            return res.status(500).json({
+                message: "Transaction was reversed. Please use a new idempotency key to retry.",
+            })
         }
     }
 
@@ -206,10 +206,19 @@ async function createInitialFundsTransaction(req, res) {
         })
     }
 
+    // Check if transaction with this idempotencyKey already exists
+    const existingTransaction = await transactionModel.findOne({ idempotencyKey });
+    if (existingTransaction) {
+        return res.status(200).json({
+            message: "Transaction already exists",
+            transaction: existingTransaction
+        });
+    }
+
     // from account will be system account, we can get it by finding account with systemUser true and currency same as toAccount currency
     const fromUserAccount = await accountModel.findOne({
-        // systemUser: true,
         user: req.user._id,
+        
     })
 
     if (!fromUserAccount) {

@@ -26,7 +26,7 @@ async function createTransaction(req, res) {
     /** 
      * 1. Validate request
      */
-    if (!fromAccount || !toAccount || amount || !idempotencyKey) {
+    if (!fromAccount || !toAccount || !amount || !idempotencyKey) {
         return res.status(400).json({
             message: "FromAccount, toAccount, amount and idempotencyKey are required"
         });
@@ -113,35 +113,35 @@ async function createTransaction(req, res) {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-        const transaction = await transactionModel.create({
+        const [transaction] = await transactionModel.create([{
             fromAccount,
             toAccount,
             amount,
             idempotencyKey,
             status: "PENDING"
-        }, { session });
+        }], { session });
 
-        
+
 
         /** 
          * 6. Create DEBIT ledger entry
          */
-        const debitLedgerEntry = await ledgerModel.create({
+        const debitLedgerEntry = await ledgerModel.create([{
             account: fromAccount,
             amount,
             transaction: transaction._id,
             type: "DEBIT"
-        }, { session });
+        }], { session });
 
         /** 
          * 7. Create CREDIT ledger entry
          */
-        const creditLedgerEntry = await ledgerModel.create({
+        const creditLedgerEntry = await ledgerModel.create([{
             account: toAccount,
             amount,
             transaction: transaction._id,
             type: "CREDIT"
-        }, { session });
+        }], { session });
 
         transaction.status = "COMPLETED";
         await transaction.save({ session });
@@ -175,7 +175,7 @@ async function createTransaction(req, res) {
             error: error.message
         })
     }
-    
+
 }
 
 
@@ -217,8 +217,8 @@ async function createInitialFundsTransaction(req, res) {
 
     // from account will be system account, we can get it by finding account with systemUser true and currency same as toAccount currency
     const fromUserAccount = await accountModel.findOne({
-        user: req.user._id,
-        
+        systemUser: true,
+        currency: toUserAccount.currency
     })
 
     if (!fromUserAccount) {
@@ -229,44 +229,54 @@ async function createInitialFundsTransaction(req, res) {
 
     const session = await mongoose.startSession();
     session.startTransaction();
-    const transaction = new transactionModel({
-        fromAccount: fromUserAccount._id,
-        toAccount: toUserAccount._id,
-        amount,
-        idempotencyKey,
-        status: "PENDING"
-    });
+    try {
+        const transaction = new transactionModel({
+            fromAccount: fromUserAccount._id,
+            toAccount: toUserAccount._id,
+            amount,
+            idempotencyKey,
+            status: "PENDING"
+        });
 
-    const debitLedgerEntry = await ledgerModel.create([{
-        account: fromUserAccount._id,
-        amount,
-        transaction: transaction._id,
-        type: "DEBIT"
-    }], { session });
+        const debitLedgerEntry = await ledgerModel.create([{
+            account: fromUserAccount._id,
+            amount,
+            transaction: transaction._id,
+            type: "DEBIT"
+        }], { session });
 
-    const creditLedgerEntry = await ledgerModel.create([{
-        account: toUserAccount._id,
-        amount,
-        transaction: transaction._id,
-        type: "CREDIT"
-    }], { session });
+        const creditLedgerEntry = await ledgerModel.create([{
+            account: toUserAccount._id,
+            amount,
+            transaction: transaction._id,
+            type: "CREDIT"
+        }], { session });
 
-    transaction.status = "COMPLETED";
-    await transaction.save({ session });
+        transaction.status = "COMPLETED";
+        await transaction.save({ session });
 
-    await session.commitTransaction();
-    session.endSession();
+        await session.commitTransaction();
+        session.endSession();
 
-    // emailService.sendEmail({
-    //     to: toUserAccount.user.email,
-    //     subject: "Initial Funds Credited",
-    //     text: `Your account has been credited with ${amount} ${toUserAccount.currency} as initial funds.`
-    // })
+        // emailService.sendEmail({
+        //     to: toUserAccount.user.email,
+        //     subject: "Initial Funds Credited",
+        //     text: `Your account has been credited with ${amount} ${toUserAccount.currency} as initial funds.`
+        // })
 
-    return res.status(201).json({
-        message: "Initial funds transaction created successfully",
-        transaction: transaction
-    });
+        return res.status(201).json({
+            message: "Initial funds transaction created successfully",
+            transaction: transaction
+        });
+    } catch (error) {
+        await session.abortTransaction();
+        res.status(500).json({
+            message: "An error occurred while processing the transaction",
+            error: error.message
+        });
+    } finally {
+        session.endSession();
+    }
 }
 
 module.exports = {
